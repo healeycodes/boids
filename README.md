@@ -13,3 +13,11 @@ _Under construction_ 👷🏻‍♀️
 - Jittery (don't know why yet)
 - Doesn't use a snapshot for each 'generation'
 - ..
+
+<br>
+
+### Run 🦢
+
+```
+go run main.go
+```
