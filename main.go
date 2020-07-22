@@ -62,7 +62,7 @@ func (v *Vector2D) Limit(max float64) {
 }
 
 func (v *Vector2D) Normalize() {
-	mag := math.Sqrt(math.Pow(v.x, 2) + math.Pow(v.y, 2))
+	mag := math.Sqrt(v.x*v.x + v.y*v.y)
 	v.x /= mag
 	v.y /= mag
 }
@@ -88,9 +88,7 @@ func (v *Vector2D) Multiply(z float64) {
 }
 
 func (v Vector2D) Distance(v2 Vector2D) float64 {
-	first := math.Pow(v2.x-v.x, 2)
-	second := math.Pow(v2.y-v.y, 2)
-	return math.Sqrt(first + second)
+	return math.Sqrt(math.Pow(v2.x-v.x, 2) + math.Pow(v2.y-v.y, 2))
 }
 
 type Boid struct {
