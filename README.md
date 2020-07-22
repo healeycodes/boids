@@ -1,8 +1,6 @@
-# boids
+# Boids with Go and Ebiten
 
 _Under construction_ 👷🏻‍♀️
-
-Boids using Go and Ebiten.
 
 👉🏻  [Demo link](https://healeycodes.github.io/boids/) to the WASM version.
 
