@@ -21,3 +21,10 @@ _Under construction_ 👷🏻‍♀️
 ```
 go run main.go
 ```
+
+### Build 🕊
+
+```
+GOOS=js GOARCH=wasm go build -o boids.wasm github.com/healeycodes/boids
+```
+
