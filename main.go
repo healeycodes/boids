@@ -15,7 +15,7 @@ import (
 const (
 	screenWidth  = 1024
 	screenHeight = 768
-	numBoids     = 300
+	numBoids     = 75
 	maxForce     = 1.0
 	maxSpeed     = 4.0
 )
@@ -53,9 +53,12 @@ func (v *Vector2D) Subtract(v2 Vector2D) {
 	v.y -= v2.y
 }
 
-func (v *Vector2D) Limit(z float64) {
-	v.x = math.Max(-z, math.Min(v.x, z))
-	v.y = math.Max(-z, math.Min(v.y, z))
+func (v *Vector2D) Limit(max float64) {
+	magSq := v.MagnitudeSquared()
+	if magSq > max*max {
+		v.Divide(math.Sqrt(magSq))
+		v.Multiply(max)
+	}
 }
 
 func (v *Vector2D) Normalize() {
@@ -70,6 +73,10 @@ func (v *Vector2D) SetMagnitude(z float64) {
 	v.y *= z
 }
 
+func (v *Vector2D) MagnitudeSquared() float64 {
+	return v.x*v.x + v.y*v.y
+}
+
 func (v *Vector2D) Divide(z float64) {
 	v.x /= z
 	v.y /= z
@@ -80,8 +87,6 @@ func (v *Vector2D) Multiply(z float64) {
 	v.y *= z
 }
 
-// Distance finds the length of the hypotenuse between two points.
-// Forumula is the square root of (x2 - x1)^2 + (y2 - y1)^2
 func (v Vector2D) Distance(v2 Vector2D) float64 {
 	first := math.Pow(v2.x-v.x, 2)
 	second := math.Pow(v2.y-v.y, 2)
@@ -94,6 +99,7 @@ type Boid struct {
 	pos         Vector2D
 	vel         Vector2D
 	acc         Vector2D
+	angle       float64
 }
 
 func (boid *Boid) Align(restOfFlock []*Boid) {
@@ -158,12 +164,13 @@ func (boid *Boid) Separation(restOfFlock []*Boid) {
 		steering.Divide(float64(total))
 		steering.SetMagnitude(maxSpeed)
 		steering.Subtract(boid.vel)
-		steering.SetMagnitude(maxForce * 1.1)
+		steering.SetMagnitude(maxForce * 1.2)
 	}
 	boid.acc.Add(steering)
 }
 
 func (boid *Boid) Update() {
+	boid.angle = -1*math.Atan2(boid.vel.y*-1, boid.vel.x) + math.Pi/2
 	boid.pos.Add(boid.vel)
 	boid.vel.Add(boid.acc)
 	boid.vel.Limit(maxSpeed)
@@ -247,7 +254,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		boid := g.flock.sprites[i]
 		g.op.GeoM.Reset()
 		g.op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
-		// g.op.GeoM.Rotate(boid.angle * math.Pi / 180)
+		g.op.GeoM.Rotate(boid.angle)
 		g.op.GeoM.Translate(boid.pos.x, boid.pos.y)
 		screen.DrawImage(fishImage, &g.op)
 	}
