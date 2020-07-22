@@ -13,11 +13,14 @@ import (
 )
 
 const (
-	screenWidth  = 1024
-	screenHeight = 768
-	numBoids     = 75
-	maxForce     = 1.0
-	maxSpeed     = 4.0
+	screenWidth          = 1000
+	screenHeight         = 1000
+	numBoids             = 75
+	maxForce             = 1.0
+	maxSpeed             = 4.0
+	alignPerception      = 75.0
+	cohesionPerception   = 100.0
+	separationPerception = 50.0
 )
 
 var (
@@ -38,59 +41,6 @@ func init() {
 	fishImage.DrawImage(fish, op)
 }
 
-type Vector2D struct {
-	x float64
-	y float64
-}
-
-func (v *Vector2D) Add(v2 Vector2D) {
-	v.x += v2.x
-	v.y += v2.y
-}
-
-func (v *Vector2D) Subtract(v2 Vector2D) {
-	v.x -= v2.x
-	v.y -= v2.y
-}
-
-func (v *Vector2D) Limit(max float64) {
-	magSq := v.MagnitudeSquared()
-	if magSq > max*max {
-		v.Divide(math.Sqrt(magSq))
-		v.Multiply(max)
-	}
-}
-
-func (v *Vector2D) Normalize() {
-	mag := math.Sqrt(v.x*v.x + v.y*v.y)
-	v.x /= mag
-	v.y /= mag
-}
-
-func (v *Vector2D) SetMagnitude(z float64) {
-	v.Normalize()
-	v.x *= z
-	v.y *= z
-}
-
-func (v *Vector2D) MagnitudeSquared() float64 {
-	return v.x*v.x + v.y*v.y
-}
-
-func (v *Vector2D) Divide(z float64) {
-	v.x /= z
-	v.y /= z
-}
-
-func (v *Vector2D) Multiply(z float64) {
-	v.x *= z
-	v.y *= z
-}
-
-func (v Vector2D) Distance(v2 Vector2D) float64 {
-	return math.Sqrt(math.Pow(v2.x-v.x, 2) + math.Pow(v2.y-v.y, 2))
-}
-
 type Boid struct {
 	imageWidth  int
 	imageHeight int
@@ -100,71 +50,59 @@ type Boid struct {
 	angle       float64
 }
 
-func (boid *Boid) Align(restOfFlock []*Boid) {
-	perception := 75.0
-	steering := Vector2D{}
-	total := 0
-	for i := range restOfFlock {
-		other := restOfFlock[i]
-		d := boid.pos.Distance(other.pos)
-		if boid != other && d < perception {
-			total++
-			steering.Add(other.vel)
-		}
-	}
-	if total > 0 {
-		steering.Divide(float64(total))
-		steering.SetMagnitude(maxSpeed)
-		steering.Subtract(boid.vel)
-		steering.Limit(maxForce)
-	}
-	boid.acc.Add(steering)
-}
+func (boid *Boid) Rules(restOfFlock []*Boid) {
+	alignSteering := Vector2D{}
+	alignTotal := 0
+	cohesionSteering := Vector2D{}
+	cohesionTotal := 0
+	separationSteering := Vector2D{}
+	separationTotal := 0
 
-func (boid *Boid) Cohesion(restOfFlock []*Boid) {
-	perception := 100.0
-	steering := Vector2D{}
-	total := 0
 	for i := range restOfFlock {
 		other := restOfFlock[i]
 		d := boid.pos.Distance(other.pos)
-		if boid != other && d < perception {
-			total++
-			steering.Add(other.pos)
+		if boid != other {
+			if d < alignPerception {
+				alignTotal++
+				alignSteering.Add(other.vel)
+			}
+			if d < cohesionPerception {
+				cohesionTotal++
+				cohesionSteering.Add(other.pos)
+			}
+			if d < separationPerception {
+				separationTotal++
+				diff := boid.pos
+				diff.Subtract(other.pos)
+				diff.Divide(d)
+				separationSteering.Add(diff)
+			}
 		}
 	}
-	if total > 0 {
-		steering.Divide(float64(total))
-		steering.Subtract(boid.pos)
-		steering.SetMagnitude(maxSpeed)
-		steering.Subtract(boid.vel)
-		steering.SetMagnitude(maxForce)
-	}
-	boid.acc.Add(steering)
-}
 
-func (boid *Boid) Separation(restOfFlock []*Boid) {
-	perception := 50.0
-	steering := Vector2D{}
-	total := 0
-	for i := range restOfFlock {
-		other := restOfFlock[i]
-		d := boid.pos.Distance(other.pos)
-		if boid != other && d < perception {
-			total++
-			diff := boid.pos
-			diff.Subtract(other.pos)
-			diff.Divide(d)
-			steering.Add(diff)
-		}
+	if separationTotal > 0 {
+		separationSteering.Divide(float64(separationTotal))
+		separationSteering.SetMagnitude(maxSpeed)
+		separationSteering.Subtract(boid.vel)
+		separationSteering.SetMagnitude(maxForce * 1.2)
 	}
-	if total > 0 {
-		steering.Divide(float64(total))
-		steering.SetMagnitude(maxSpeed)
-		steering.Subtract(boid.vel)
-		steering.SetMagnitude(maxForce * 1.2)
+	if cohesionTotal > 0 {
+		cohesionSteering.Divide(float64(cohesionTotal))
+		cohesionSteering.Subtract(boid.pos)
+		cohesionSteering.SetMagnitude(maxSpeed)
+		cohesionSteering.Subtract(boid.vel)
+		cohesionSteering.SetMagnitude(maxForce)
 	}
-	boid.acc.Add(steering)
+	if alignTotal > 0 {
+		alignSteering.Divide(float64(alignTotal))
+		alignSteering.SetMagnitude(maxSpeed)
+		alignSteering.Subtract(boid.vel)
+		alignSteering.Limit(maxForce)
+	}
+
+	boid.acc.Add(alignSteering)
+	boid.acc.Add(cohesionSteering)
+	boid.acc.Add(separationSteering)
 }
 
 func (boid *Boid) Update() {
@@ -193,17 +131,10 @@ type Boids struct {
 }
 
 func (flock *Boids) Update() {
-	// snapspot := make([]*Boid, len(flock.sprites))
-	// for i := range flock.sprites {
-	// 	boid := flock.sprites[i]
-	// 	snapspot[i] = &Boid{pos: boid.pos, vel: boid.vel, acc: boid.acc}
-	// }
 	for i := range flock.sprites {
 		boid := flock.sprites[i]
 		boid.Edges()
-		boid.Align(flock.sprites)
-		boid.Cohesion(flock.sprites)
-		boid.Separation(flock.sprites)
+		boid.Rules(flock.sprites)
 		boid.Update()
 	}
 }
@@ -268,4 +199,59 @@ func main() {
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// TODO: split into a vector library
+
+type Vector2D struct {
+	x float64
+	y float64
+}
+
+func (v *Vector2D) Add(v2 Vector2D) {
+	v.x += v2.x
+	v.y += v2.y
+}
+
+func (v *Vector2D) Subtract(v2 Vector2D) {
+	v.x -= v2.x
+	v.y -= v2.y
+}
+
+func (v *Vector2D) Limit(max float64) {
+	magSq := v.MagnitudeSquared()
+	if magSq > max*max {
+		v.Divide(math.Sqrt(magSq))
+		v.Multiply(max)
+	}
+}
+
+func (v *Vector2D) Normalize() {
+	mag := math.Sqrt(v.x*v.x + v.y*v.y)
+	v.x /= mag
+	v.y /= mag
+}
+
+func (v *Vector2D) SetMagnitude(z float64) {
+	v.Normalize()
+	v.x *= z
+	v.y *= z
+}
+
+func (v *Vector2D) MagnitudeSquared() float64 {
+	return v.x*v.x + v.y*v.y
+}
+
+func (v *Vector2D) Divide(z float64) {
+	v.x /= z
+	v.y /= z
+}
+
+func (v *Vector2D) Multiply(z float64) {
+	v.x *= z
+	v.y *= z
+}
+
+func (v Vector2D) Distance(v2 Vector2D) float64 {
+	return math.Sqrt(math.Pow(v2.x-v.x, 2) + math.Pow(v2.y-v.y, 2))
 }
