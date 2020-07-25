@@ -10,7 +10,10 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/healeycodes/boids/vector"
 )
+
+type Vector2D = vector.Vector2D
 
 const (
 	screenWidth          = 1000
@@ -24,7 +27,7 @@ const (
 )
 
 var (
-	fishImage *ebiten.Image
+	birdImage *ebiten.Image
 )
 
 func init() {
@@ -34,11 +37,10 @@ func init() {
 	}
 
 	w, h := fish.Size()
-	fishImage, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
-
+	birdImage, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
 	op := &ebiten.DrawImageOptions{}
 	op.ColorM.Scale(1, 1, 1, 1)
-	fishImage.DrawImage(fish, op)
+	birdImage.DrawImage(fish, op)
 }
 
 type Boid struct {
@@ -106,7 +108,7 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 }
 
 func (boid *Boid) Update() {
-	boid.angle = -1*math.Atan2(boid.vel.y*-1, boid.vel.x) + math.Pi/2
+	boid.angle = -1*math.Atan2(boid.vel.Y*-1, boid.vel.X) + math.Pi/2
 	boid.pos.Add(boid.vel)
 	boid.vel.Add(boid.acc)
 	boid.vel.Limit(maxSpeed)
@@ -114,33 +116,33 @@ func (boid *Boid) Update() {
 }
 
 func (boid *Boid) Edges() {
-	if boid.pos.x < 0 {
-		boid.pos.x = screenWidth
-	} else if boid.pos.x > screenWidth {
-		boid.pos.x = 0
+	if boid.pos.X < 0 {
+		boid.pos.X = screenWidth
+	} else if boid.pos.X > screenWidth {
+		boid.pos.X = 0
 	}
-	if boid.pos.y < 0 {
-		boid.pos.y = screenHeight
-	} else if boid.pos.y > screenHeight {
-		boid.pos.y = 0
+	if boid.pos.Y < 0 {
+		boid.pos.Y = screenHeight
+	} else if boid.pos.Y > screenHeight {
+		boid.pos.Y = 0
 	}
 }
 
-type Boids struct {
-	sprites []*Boid
+type Flock struct {
+	boids []*Boid
 }
 
-func (flock *Boids) Update() {
-	for i := range flock.sprites {
-		boid := flock.sprites[i]
+func (flock *Flock) Update() {
+	for i := range flock.boids {
+		boid := flock.boids[i]
 		boid.Edges()
-		boid.Rules(flock.sprites)
+		boid.Rules(flock.boids)
 		boid.Update()
 	}
 }
 
 type Game struct {
-	flock  Boids
+	flock  Flock
 	op     ebiten.DrawImageOptions
 	inited bool
 }
@@ -151,18 +153,18 @@ func (g *Game) init() {
 	}()
 
 	rand.Seed(time.Hour.Milliseconds())
-	g.flock.sprites = make([]*Boid, numBoids)
-	for i := range g.flock.sprites {
-		w, h := fishImage.Size()
+	g.flock.boids = make([]*Boid, numBoids)
+	for i := range g.flock.boids {
+		w, h := birdImage.Size()
 		x, y := rand.Float64()*float64(screenWidth-w), rand.Float64()*float64(screenWidth-h)
-		min, max := -2.0, 2.0
+		min, max := -maxForce, maxForce
 		vx, vy := rand.Float64()*(max-min)+min, rand.Float64()*(max-min)+min
-		g.flock.sprites[i] = &Boid{
+		g.flock.boids[i] = &Boid{
 			imageWidth:  w,
 			imageHeight: h,
-			pos:         Vector2D{x: x, y: y},
-			vel:         Vector2D{x: vx, y: vy},
-			acc:         Vector2D{x: 0, y: 0},
+			pos:         Vector2D{X: x, Y: y},
+			vel:         Vector2D{X: vx, Y: vy},
+			acc:         Vector2D{X: 0, Y: 0},
 		}
 	}
 }
@@ -178,14 +180,14 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.NRGBA{0xff, 0xff, 0xff, 0xff})
-	w, h := fishImage.Size()
-	for i := range g.flock.sprites {
-		boid := g.flock.sprites[i]
+	w, h := birdImage.Size()
+	for i := range g.flock.boids {
+		boid := g.flock.boids[i]
 		g.op.GeoM.Reset()
 		g.op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
 		g.op.GeoM.Rotate(boid.angle)
-		g.op.GeoM.Translate(boid.pos.x, boid.pos.y)
-		screen.DrawImage(fishImage, &g.op)
+		g.op.GeoM.Translate(boid.pos.X, boid.pos.Y)
+		screen.DrawImage(birdImage, &g.op)
 	}
 }
 
@@ -199,59 +201,4 @@ func main() {
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
-}
-
-// TODO: split into a vector library
-
-type Vector2D struct {
-	x float64
-	y float64
-}
-
-func (v *Vector2D) Add(v2 Vector2D) {
-	v.x += v2.x
-	v.y += v2.y
-}
-
-func (v *Vector2D) Subtract(v2 Vector2D) {
-	v.x -= v2.x
-	v.y -= v2.y
-}
-
-func (v *Vector2D) Limit(max float64) {
-	magSq := v.MagnitudeSquared()
-	if magSq > max*max {
-		v.Divide(math.Sqrt(magSq))
-		v.Multiply(max)
-	}
-}
-
-func (v *Vector2D) Normalize() {
-	mag := math.Sqrt(v.x*v.x + v.y*v.y)
-	v.x /= mag
-	v.y /= mag
-}
-
-func (v *Vector2D) SetMagnitude(z float64) {
-	v.Normalize()
-	v.x *= z
-	v.y *= z
-}
-
-func (v *Vector2D) MagnitudeSquared() float64 {
-	return v.x*v.x + v.y*v.y
-}
-
-func (v *Vector2D) Divide(z float64) {
-	v.x /= z
-	v.y /= z
-}
-
-func (v *Vector2D) Multiply(z float64) {
-	v.x *= z
-	v.y *= z
-}
-
-func (v Vector2D) Distance(v2 Vector2D) float64 {
-	return math.Sqrt(math.Pow(v2.x-v.x, 2) + math.Pow(v2.y-v.y, 2))
 }
