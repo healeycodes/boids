@@ -4,7 +4,7 @@ _Under construction_ 👷🏻‍♀️
 
 👉🏻  [Demo link](https://healeycodes.github.io/boids/) to the WASM version.
 
-![Animated GIF of a flocking simulation](https://github.com/healeycodes/boids/raw/master/preview.gif)
+![Animated GIF of a flocking simulation](https://github.com/healeycodes/boids/raw/master/dist/preview.gif)
 
 ### TODOs
 
@@ -25,6 +25,6 @@ go run main.go
 ### Build 🕊
 
 ```
-GOOS=js GOARCH=wasm go build -o boids.wasm github.com/healeycodes/boids
+GOOS=js GOARCH=wasm go build -o dist/boids.wasm github.com/healeycodes/boids
 ```
 

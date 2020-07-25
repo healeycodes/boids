@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<script src="wasm_exec.js"></script>
+<script src="dist/wasm_exec.js"></script>
 <script>
 // Polyfill
 if (!WebAssembly.instantiateStreaming) {
@@ -10,7 +10,7 @@ if (!WebAssembly.instantiateStreaming) {
 }
 
 const go = new Go();
-WebAssembly.instantiateStreaming(fetch("boids.wasm"), go.importObject).then(result => {
+WebAssembly.instantiateStreaming(fetch("dist/boids.wasm"), go.importObject).then(result => {
   go.run(result.instance);
 });
 </script>
