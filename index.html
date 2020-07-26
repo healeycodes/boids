@@ -1,4 +1,22 @@
 <!DOCTYPE html>
+<style>
+  body,
+  html,
+  main {
+    height: 100%;
+  }
+  main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
+<main>
+  <div id="loading">
+     Loading..
+  </div>
+</main>
+
 <script src="dist/pako.min.js"></script>
 <script src="dist/wasm_exec.js"></script>
 <script>
@@ -12,11 +30,16 @@
     }
 
     // Inflate the gzip-compressed file using the Pako library
-    const file = pako.ungzip(await(await fetch("dist/boids.wasm.gz")).arrayBuffer())
+    const file = window
+      .pako
+      .ungzip(await(await fetch("dist/boids.wasm.gz")).arrayBuffer())
     const go = new Go();
     WebAssembly
-      .instantiateStreaming(file, go.importObject)
+      .instantiate(file, go.importObject)
       .then(result => {
+        document
+          .querySelector('#loading')
+          .remove();
         go.run(result.instance);
       });
   })()
