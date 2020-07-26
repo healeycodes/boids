@@ -44,12 +44,11 @@ func init() {
 }
 
 type Boid struct {
-	imageWidth  int
-	imageHeight int
-	pos         Vector2D
-	vel         Vector2D
-	acc         Vector2D
-	angle       float64
+	imageWidth   int
+	imageHeight  int
+	position     Vector2D
+	velocity     Vector2D
+	acceleration Vector2D
 }
 
 func (boid *Boid) Rules(restOfFlock []*Boid) {
@@ -62,20 +61,20 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 
 	for i := range restOfFlock {
 		other := restOfFlock[i]
-		d := boid.pos.Distance(other.pos)
+		d := boid.position.Distance(other.position)
 		if boid != other {
 			if d < alignPerception {
 				alignTotal++
-				alignSteering.Add(other.vel)
+				alignSteering.Add(other.velocity)
 			}
 			if d < cohesionPerception {
 				cohesionTotal++
-				cohesionSteering.Add(other.pos)
+				cohesionSteering.Add(other.position)
 			}
 			if d < separationPerception {
 				separationTotal++
-				diff := boid.pos
-				diff.Subtract(other.pos)
+				diff := boid.position
+				diff.Subtract(other.position)
 				diff.Divide(d)
 				separationSteering.Add(diff)
 			}
@@ -85,46 +84,45 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 	if separationTotal > 0 {
 		separationSteering.Divide(float64(separationTotal))
 		separationSteering.SetMagnitude(maxSpeed)
-		separationSteering.Subtract(boid.vel)
+		separationSteering.Subtract(boid.velocity)
 		separationSteering.SetMagnitude(maxForce * 1.2)
 	}
 	if cohesionTotal > 0 {
 		cohesionSteering.Divide(float64(cohesionTotal))
-		cohesionSteering.Subtract(boid.pos)
+		cohesionSteering.Subtract(boid.position)
 		cohesionSteering.SetMagnitude(maxSpeed)
-		cohesionSteering.Subtract(boid.vel)
+		cohesionSteering.Subtract(boid.velocity)
 		cohesionSteering.SetMagnitude(maxForce)
 	}
 	if alignTotal > 0 {
 		alignSteering.Divide(float64(alignTotal))
 		alignSteering.SetMagnitude(maxSpeed)
-		alignSteering.Subtract(boid.vel)
+		alignSteering.Subtract(boid.velocity)
 		alignSteering.Limit(maxForce)
 	}
 
-	boid.acc.Add(alignSteering)
-	boid.acc.Add(cohesionSteering)
-	boid.acc.Add(separationSteering)
+	boid.acceleration.Add(alignSteering)
+	boid.acceleration.Add(cohesionSteering)
+	boid.acceleration.Add(separationSteering)
 }
 
 func (boid *Boid) Update() {
-	boid.angle = -1*math.Atan2(boid.vel.Y*-1, boid.vel.X) + math.Pi/2
-	boid.pos.Add(boid.vel)
-	boid.vel.Add(boid.acc)
-	boid.vel.Limit(maxSpeed)
-	boid.acc.Multiply(0.0)
+	boid.position.Add(boid.velocity)
+	boid.velocity.Add(boid.acceleration)
+	boid.velocity.Limit(maxSpeed)
+	boid.acceleration.Multiply(0.0)
 }
 
 func (boid *Boid) Edges() {
-	if boid.pos.X < 0 {
-		boid.pos.X = screenWidth
-	} else if boid.pos.X > screenWidth {
-		boid.pos.X = 0
+	if boid.position.X < 0 {
+		boid.position.X = screenWidth
+	} else if boid.position.X > screenWidth {
+		boid.position.X = 0
 	}
-	if boid.pos.Y < 0 {
-		boid.pos.Y = screenHeight
-	} else if boid.pos.Y > screenHeight {
-		boid.pos.Y = 0
+	if boid.position.Y < 0 {
+		boid.position.Y = screenHeight
+	} else if boid.position.Y > screenHeight {
+		boid.position.Y = 0
 	}
 }
 
@@ -132,7 +130,7 @@ type Flock struct {
 	boids []*Boid
 }
 
-func (flock *Flock) Update() {
+func (flock *Flock) Logic() {
 	for i := range flock.boids {
 		boid := flock.boids[i]
 		boid.Edges()
@@ -160,11 +158,11 @@ func (g *Game) init() {
 		min, max := -maxForce, maxForce
 		vx, vy := rand.Float64()*(max-min)+min, rand.Float64()*(max-min)+min
 		g.flock.boids[i] = &Boid{
-			imageWidth:  w,
-			imageHeight: h,
-			pos:         Vector2D{X: x, Y: y},
-			vel:         Vector2D{X: vx, Y: vy},
-			acc:         Vector2D{X: 0, Y: 0},
+			imageWidth:   w,
+			imageHeight:  h,
+			position:     Vector2D{X: x, Y: y},
+			velocity:     Vector2D{X: vx, Y: vy},
+			acceleration: Vector2D{X: 0, Y: 0},
 		}
 	}
 }
@@ -174,7 +172,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 		g.init()
 	}
 
-	g.flock.Update()
+	g.flock.Logic()
 	return nil
 }
 
@@ -185,8 +183,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		boid := g.flock.boids[i]
 		g.op.GeoM.Reset()
 		g.op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
-		g.op.GeoM.Rotate(boid.angle)
-		g.op.GeoM.Translate(boid.pos.X, boid.pos.Y)
+		g.op.GeoM.Rotate(-1*math.Atan2(boid.velocity.Y*-1, boid.velocity.X) + math.Pi/2)
+		g.op.GeoM.Translate(boid.position.X, boid.position.Y)
 		screen.DrawImage(birdImage, &g.op)
 	}
 }

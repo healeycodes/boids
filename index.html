@@ -13,7 +13,7 @@
 </style>
 <main>
   <div id="loading">
-     Loading..
+     <p>Loading..</p>
   </div>
 </main>
 
@@ -21,14 +21,6 @@
 <script src="dist/wasm_exec.js"></script>
 <script>
   (async function () {
-    // Polyfill
-    if (!WebAssembly.instantiateStreaming) {
-      WebAssembly.instantiateStreaming = async (resp, importObject) => {
-        const source = await(await resp).arrayBuffer();
-        return await WebAssembly.instantiate(source, importObject);
-      };
-    }
-
     // Inflate the gzip-compressed file using the Pako library
     const file = window
       .pako
@@ -42,5 +34,5 @@
           .remove();
         go.run(result.instance);
       });
-  })()
+  })();
 </script>
