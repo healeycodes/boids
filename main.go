@@ -106,7 +106,7 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 	boid.acceleration.Add(separationSteering)
 }
 
-func (boid *Boid) Update() {
+func (boid *Boid) Movement() {
 	boid.position.Add(boid.velocity)
 	boid.velocity.Add(boid.acceleration)
 	boid.velocity.Limit(maxSpeed)
@@ -135,7 +135,7 @@ func (flock *Flock) Logic() {
 		boid := flock.boids[i]
 		boid.Edges()
 		boid.Rules(flock.boids)
-		boid.Update()
+		boid.Movement()
 	}
 }
 
