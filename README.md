@@ -6,7 +6,7 @@
 
 👉🏻  [Demo link](https://healeycodes.github.io/boids/) to the WASM version.
 
-I wrote this program, an implementation of Craig Reynolds' _Boids_, in order to learn more about deploying Go on the web + to tackle a problem that escaped me when I was learning to code!
+I wrote this program, an implementation of Craig Reynolds' _Boids_, in order to learn more about deploying Go on the web, and to tackle a problem that escaped me when I was learning to code!
 
 <br>
 
