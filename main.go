@@ -92,7 +92,7 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 		cohesionSteering.Subtract(boid.position)
 		cohesionSteering.SetMagnitude(maxSpeed)
 		cohesionSteering.Subtract(boid.velocity)
-		cohesionSteering.SetMagnitude(maxForce)
+		cohesionSteering.SetMagnitude(maxForce * 0.9)
 	}
 	if alignTotal > 0 {
 		alignSteering.Divide(float64(alignTotal))
@@ -104,6 +104,7 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 	boid.acceleration.Add(alignSteering)
 	boid.acceleration.Add(cohesionSteering)
 	boid.acceleration.Add(separationSteering)
+	boid.acceleration.Divide(3)
 }
 
 func (boid *Boid) Movement() {
