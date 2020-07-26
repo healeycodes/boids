@@ -1,16 +1,23 @@
 <!DOCTYPE html>
+<script src="dist/pako.min.js"></script>
 <script src="dist/wasm_exec.js"></script>
 <script>
-// Polyfill
-if (!WebAssembly.instantiateStreaming) {
-  WebAssembly.instantiateStreaming = async (resp, importObject) => {
-    const source = await (await resp).arrayBuffer();
-    return await WebAssembly.instantiate(source, importObject);
-  };
-}
+  (async function () {
+    // Polyfill
+    if (!WebAssembly.instantiateStreaming) {
+      WebAssembly.instantiateStreaming = async (resp, importObject) => {
+        const source = await(await resp).arrayBuffer();
+        return await WebAssembly.instantiate(source, importObject);
+      };
+    }
 
-const go = new Go();
-WebAssembly.instantiateStreaming(fetch("dist/boids.wasm"), go.importObject).then(result => {
-  go.run(result.instance);
-});
+    // Inflate the gzip-compressed file using the Pako library
+    const file = pako.ungzip(await(await fetch("dist/boids.wasm.gz")).arrayBuffer())
+    const go = new Go();
+    WebAssembly
+      .instantiateStreaming(file, go.importObject)
+      .then(result => {
+        go.run(result.instance);
+      });
+  })()
 </script>
