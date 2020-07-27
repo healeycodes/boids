@@ -51,7 +51,7 @@ type Boid struct {
 	acceleration Vector2D
 }
 
-func (boid *Boid) Rules(restOfFlock []*Boid) {
+func (boid *Boid) ApplyRules(restOfFlock []*Boid) {
 	alignSteering := Vector2D{}
 	alignTotal := 0
 	cohesionSteering := Vector2D{}
@@ -59,8 +59,7 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 	separationSteering := Vector2D{}
 	separationTotal := 0
 
-	for i := range restOfFlock {
-		other := restOfFlock[i]
+	for _, other := range restOfFlock {
 		d := boid.position.Distance(other.position)
 		if boid != other {
 			if d < alignPerception {
@@ -107,14 +106,14 @@ func (boid *Boid) Rules(restOfFlock []*Boid) {
 	boid.acceleration.Divide(3)
 }
 
-func (boid *Boid) Movement() {
+func (boid *Boid) ApplyMovement() {
 	boid.position.Add(boid.velocity)
 	boid.velocity.Add(boid.acceleration)
 	boid.velocity.Limit(maxSpeed)
 	boid.acceleration.Multiply(0.0)
 }
 
-func (boid *Boid) Edges() {
+func (boid *Boid) CheckEdges() {
 	if boid.position.X < 0 {
 		boid.position.X = screenWidth
 	} else if boid.position.X > screenWidth {
@@ -132,11 +131,10 @@ type Flock struct {
 }
 
 func (flock *Flock) Logic() {
-	for i := range flock.boids {
-		boid := flock.boids[i]
-		boid.Edges()
-		boid.Rules(flock.boids)
-		boid.Movement()
+	for _, boid := range flock.boids {
+		boid.CheckEdges()
+		boid.ApplyRules(flock.boids)
+		boid.ApplyMovement()
 	}
 }
 
@@ -178,10 +176,9 @@ func (g *Game) Update(screen *ebiten.Image) error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.NRGBA{0xff, 0xff, 0xff, 0xff})
+	screen.Fill(color.White)
 	w, h := birdImage.Size()
-	for i := range g.flock.boids {
-		boid := g.flock.boids[i]
+	for _, boid := range g.flock.boids {
 		g.op.GeoM.Reset()
 		g.op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
 		g.op.GeoM.Rotate(-1*math.Atan2(boid.velocity.Y*-1, boid.velocity.X) + math.Pi/2)
