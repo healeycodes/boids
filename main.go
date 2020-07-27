@@ -140,7 +140,6 @@ func (flock *Flock) Logic() {
 
 type Game struct {
 	flock  Flock
-	op     ebiten.DrawImageOptions
 	inited bool
 }
 
@@ -177,13 +176,14 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.White)
+	op := ebiten.DrawImageOptions{}
 	w, h := birdImage.Size()
 	for _, boid := range g.flock.boids {
-		g.op.GeoM.Reset()
-		g.op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
-		g.op.GeoM.Rotate(-1*math.Atan2(boid.velocity.Y*-1, boid.velocity.X) + math.Pi/2)
-		g.op.GeoM.Translate(boid.position.X, boid.position.Y)
-		screen.DrawImage(birdImage, &g.op)
+		op.GeoM.Reset()
+		op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
+		op.GeoM.Rotate(-1*math.Atan2(boid.velocity.Y*-1, boid.velocity.X) + math.Pi/2)
+		op.GeoM.Translate(boid.position.X, boid.position.Y)
+		screen.DrawImage(birdImage, &op)
 	}
 }
 
