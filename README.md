@@ -37,7 +37,7 @@ go run main.go
 
 This compiles the program into WebAssembly and creates a copy with gzip compression.
 
-The program can then be used on `index.html` (or `index_gzip.html` if required).
+The WebAssembly program can be viewed on `index.html` (or `index_gzip.html`).
 
 Why gzip? If you're serving files without gzip compression, you can shrink the file from 8MB to 2MB and include a 44KB library to inflate the file in a browser.
 
