@@ -17,17 +17,13 @@
   </div>
 </main>
 
-<script src="dist/pako.min.js"></script>
 <script src="dist/wasm_exec.js"></script>
 <script>
   (async function () {
-    // Inflate the gzip-compressed file using the Pako library
-    const file = window
-      .pako
-      .ungzip(await(await fetch("dist/boids.wasm.gz")).arrayBuffer())
+    const file = await fetch("dist/boids.wasm")
     const go = new Go();
     WebAssembly
-      .instantiate(file, go.importObject)
+      .instantiateStreaming(file, go.importObject)
       .then(result => {
         document
           .querySelector('#loading')
