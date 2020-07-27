@@ -4,7 +4,7 @@
 
 <br>
 
-👉🏻  [Demo link](https://healeycodes.github.io/boids/) to the WASM version.
+👉🏻 [Demo link](https://healeycodes.github.io/boids/) to the WASM version.
 
 I wrote this program, an implementation of Craig Reynolds' _Boids_, in order to learn more about deploying Go on the web, and to tackle a problem that escaped me when I was learning to code!
 
@@ -35,9 +35,11 @@ go run main.go
 ./build.sh
 ```
 
-This compiles the program into WebAssembly and gzips the result.
+This compiles the program into WebAssembly and creates a copy with gzip compression.
 
-Why gzip? We can shrink the file from 8MB to 2MB and include a 44KB library to inflate the file in a browser.
+The program can then be used on `index.html` (or `index_gzip.html` if required).
+
+Why gzip? If you're serving files without gzip compression, you can shrink the file from 8MB to 2MB and include a 44KB library to inflate the file in a browser.
 
 <br>
 
