@@ -32,14 +32,12 @@ go run main.go
 ### Build 🕊
 
 ```
-./build.sh
+GOOS=js GOARCH=wasm go build -o dist/boids.wasm github.com/healeycodes/boids
 ```
 
-This compiles the program into WebAssembly and creates a copy with gzip compression.
+This compiles the program into WebAssembly in the `dist` folder.
 
-The WebAssembly program can be viewed on `index.html` (or `index_gzip.html`).
-
-Why gzip? If you're serving files without gzip compression, you can shrink the file from 8MB to 2MB and include a 44KB library to inflate the file in a browser.
+The WebAssembly program can be viewed on `index.html`.
 
 <br>
 
