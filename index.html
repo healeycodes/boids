@@ -20,8 +20,9 @@
 <script>
   (async function () {
     const go = new Go();
+    const file = await fetch("dist/boids.wasm").arrayBuffer();
     WebAssembly
-      .instantiateStreaming(fetch("dist/boids.wasm"), go.importObject)
+      .instantiate(file, go.importObject)
       .then(result => {
         document
           .querySelector('#loading')
