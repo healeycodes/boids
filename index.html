@@ -12,18 +12,19 @@
 </style>
 <main>
   <div id="loading">
-     <p>Loading..</p>
+    <p>Loading..</p>
   </div>
 </main>
 
 <script src="dist/wasm_exec.js"></script>
 <script>
-  (async function () {
+  (function () {
     const go = new Go();
     // WebAssembly.instantiateStreaming is more efficient
     // but doesn't work on Safari
-    WebAssembly
-      .instantiate(fetch("dist/boids.wasm").arrayBuffer(), go.importObject)
+    fetch('dist/boids.wasm')
+      .then(response => response.arrayBuffer())
+      .then(bytes => WebAssembly.instantiate(bytes, importObject))
       .then(result => {
         document
           .querySelector('#loading')
