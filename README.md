@@ -37,7 +37,7 @@ GOOS=js GOARCH=wasm go build -o dist/boids.wasm github.com/healeycodes/boids
 
 This compiles the program into WebAssembly in the `dist` folder.
 
-The WebAssembly program can be viewed on `index.html`.
+The simulation can be viewed in a web browser via `index.html`. To get this working locally, you may need to serve the files from a web server.
 
 <br>
 
