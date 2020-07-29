@@ -24,7 +24,7 @@
     // but doesn't work on Safari
     fetch('dist/boids.wasm')
       .then(response => response.arrayBuffer())
-      .then(bytes => WebAssembly.instantiate(bytes, importObject))
+      .then(bytes => WebAssembly.instantiate(bytes, go.importObject))
       .then(result => {
         document
           .querySelector('#loading')
