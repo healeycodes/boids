@@ -20,11 +20,10 @@
 <script>
   (async function () {
     const go = new Go();
-    const file = await fetch("dist/boids.wasm");
     // WebAssembly.instantiateStreaming is more efficient
     // but doesn't work on Safari
     WebAssembly
-      .instantiate(file.arrayBuffer(), go.importObject)
+      .instantiate(fetch("dist/boids.wasm").arrayBuffer(), go.importObject)
       .then(result => {
         document
           .querySelector('#loading')
