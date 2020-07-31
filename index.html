@@ -11,9 +11,7 @@
   }
 </style>
 <main>
-  <div id="loading">
     <p>Loading..</p>
-  </div>
 </main>
 
 <script src="dist/wasm_exec.js"></script>
@@ -27,7 +25,7 @@
       .then(bytes => WebAssembly.instantiate(bytes, go.importObject))
       .then(result => {
         document
-          .querySelector('#loading')
+          .querySelector('main')
           .remove();
         go.run(result.instance);
       });
